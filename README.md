@@ -11,8 +11,7 @@ A personal Security Operations Center (SOC) and cloud infrastructure lab running
 │                  Home SOC Lab Server                    │
 │              Ubuntu Server 24.04 LTS                    │
 │         Asus TUF A15  |  16GB RAM  |  1TB+ SSD         │
-│                  LAN: 192.168.2.15                      │
-│                Tailscale: 100.85.43.39                  │
+│                     │
 │                                                         │
 │  ┌──────────────┐  ┌─────────────┐  ┌───────────────┐  │
 │  │ Splunk Free  │  │  Suricata   │  │  Flask SOC    │  │
