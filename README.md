@@ -37,17 +37,17 @@ A personal Security Operations Center (SOC) and cloud infrastructure lab running
 
 ## 🧰 Stack & Tools
 
-| Component | Tool | Purpose | Port |
-|-----------|------|---------|------|
-| SIEM | Splunk Free 10.2.1 | Log ingestion, correlation, alerting | 8000 / 8089 |
-| Network IDS | Suricata | Packet inspection, ~65K ET rules | — |
-| EDR (planned) | Wazuh | Endpoint detection & response | — |
-| SOC Dashboard | Flask + psutil | Live service status, log viewer | 5000 |
-| Cloud Storage | Nextcloud 33 | Self-hosted file storage | 80 / 443 |
-| Evasion Sim | Tor + Proxychains4 | Anonymized traffic, detection testing | — |
-| Remote Access | Tailscale | Secure VPN mesh | — |
-| Firewall | UFW | Port/access management | — |
-| OS | Ubuntu Server 24.04 LTS | Host operating system | — |
+| Component | Tool | Purpose |
+|-----------|------|---------|
+| SIEM | Splunk Free 10.2.1 | Log ingestion, correlation, alerting |
+| Network IDS | Suricata | Packet inspection, ~65K ET rules |
+| EDR (planned) | Wazuh | Endpoint detection & response |
+| SOC Dashboard | Flask + psutil | Live service status, log viewer |
+| Cloud Storage | Nextcloud 33 | Self-hosted file storage |
+| Evasion Sim | Tor + Proxychains4 | Anonymized traffic, detection testing |
+| Remote Access | Tailscale | Secure VPN mesh |
+| Firewall | UFW | Port/access management |
+| OS | Ubuntu Server 24.04 LTS | Host operating system |
 
 ---
 
