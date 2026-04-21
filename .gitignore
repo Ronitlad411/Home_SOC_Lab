@@ -1,0 +1,22 @@
+# Secrets
+*.key
+*.pem
+*.crt
+.env
+.env*
+secrets/
+
+# Splunk internals
+*.db
+*.tsidx
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs (don't commit actual log data)
+*.log
