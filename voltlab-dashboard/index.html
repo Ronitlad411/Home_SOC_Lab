@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HomeLab Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ── PALETTE ── */
+:root{
+  --bg:       #0f0e17;
+  --bg2:      #1a1830;
+  --bg3:      #231f3a;
+  --border:   #2e2a4a;
+  --accent:   #7c6fe0;
+  --accent2:  #a78bfa;
+  --green:    #34d399;
+  --amber:    #fbbf24;
+  --red:      #f87171;
+  --blue:     #60a5fa;
+  --text:     #e2e0f0;
+  --muted:    #6b6890;
+  --card:     #1e1b35;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px;min-height:100vh;}
+::-webkit-scrollbar{height:3px;width:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* NAVBAR */
+.navbar{position:fixed;top:0;left:0;right:0;height:60px;background:var(--bg2);border-bottom:1px solid var(--border);z-index:100;display:flex;align-items:center;padding:0 28px;gap:40px;}
+.nav-logo{display:flex;align-items:center;gap:12px;color:var(--accent2);font-size:20px;font-weight:700;}
+.nav-logo-box{width:36px;height:36px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.nav-tabs{display:flex;}
+.nav-tab{padding:0 20px;height:60px;display:flex;align-items:center;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;}
+.nav-tab:hover{color:var(--accent2);}
+.nav-tab.active{color:var(--accent2);border-bottom:2px solid var(--accent2);}
+
+.page{display:none;padding-top:60px;}
+.page.active{display:block;}
+
+/* ── MONITOR ── */
+.monitor-page{padding:22px 28px 28px;}
+
+/* TOP ROW — 5 stat cards like reference */
+.stat-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;}
+.stat-card-accent{position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0;}
+.stat-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-bottom:12px;}
+.stat-label{font-size:11px;color:var(--muted);margin-bottom:6px;letter-spacing:0.3px;}
+.stat-val{font-size:26px;font-weight:700;color:var(--text);line-height:1;margin-bottom:4px;}
+.stat-sub{font-size:11px;color:var(--muted);}
+.stat-delta{font-size:11px;margin-top:6px;display:flex;align-items:center;gap:4px;}
+.delta-pill{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:700;}
+.delta-up{background:rgba(52,211,153,0.15);color:var(--green);}
+.delta-warn{background:rgba(251,191,36,0.15);color:var(--amber);}
+.delta-red{background:rgba(248,113,113,0.15);color:var(--red);}
+
+/* MIDDLE ROW — big chart + recent events table */
+.mid-row{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:20px;}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;}
+.panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.panel-title{font-size:13px;font-weight:700;color:var(--text);}
+.panel-badge{font-size:10px;padding:3px 10px;border-radius:20px;background:rgba(124,111,224,0.2);color:var(--accent2);border:1px solid var(--border);}
+.chart-meta{font-size:11px;color:var(--muted);margin-bottom:4px;}
+.chart-big-val{font-size:28px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.chart-big-delta{font-size:11px;color:var(--green);margin-bottom:14px;}
+
+/* Recent events table */
+.evt-table{width:100%;}
+.evt-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+.evt-row:last-child{border-bottom:none;}
+.evt-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.evt-desc{font-size:11px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.evt-time{font-size:10px;color:var(--muted);white-space:nowrap;}
+.evt-badge{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700;white-space:nowrap;}
+
+/* BOTTOM ROW — 3 small charts */
+.bot-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.mini-chart-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
+.mini-chart-val{font-size:20px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.mini-chart-sub{font-size:11px;margin-bottom:12px;}
+
+/* ── LOGS ── */
+.logs-page{padding:22px 28px;}
+.page-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px;}
+.page-title{font-size:15px;font-weight:700;color:var(--text);}
+.log-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.live-indicator{font-size:11px;color:var(--green);display:flex;align-items:center;gap:7px;}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.refresh-btn{font-size:14px;padding:5px 10px;border:1px solid var(--border);background:transparent;color:var(--accent2);border-radius:6px;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all 0.15s;}
+.refresh-btn:hover{background:var(--bg3);}
+.auto-toggle{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);cursor:pointer;}
+.toggle-box{width:32px;height:18px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);position:relative;cursor:pointer;transition:background 0.2s;}
+.toggle-box.on{background:rgba(124,111,224,0.3);border-color:var(--accent);}
+.toggle-knob{width:12px;height:12px;border-radius:50%;background:var(--muted);position:absolute;top:2px;left:2px;transition:all 0.2s;}
+.toggle-box.on .toggle-knob{background:var(--accent2);left:16px;}
+.filter-row{display:flex;gap:7px;flex-wrap:wrap;}
+.filter-btn{font-size:11px;padding:5px 14px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:6px;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all 0.15s;}
+.filter-btn:hover{color:var(--accent2);}
+.filter-btn.active{background:rgba(124,111,224,0.2);color:var(--accent2);border-color:var(--accent);}
+.log-stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+.log-stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;}
+.log-stat-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:5px;}
+.log-stat-val{font-size:26px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.log-stat-sub{font-size:11px;}
+.log-table-wrap{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.log-thead{display:grid;grid-template-columns:36px 140px 1fr 140px 110px;padding:11px 20px;border-bottom:1px solid var(--border);}
+.log-th{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+.log-tr{display:grid;grid-template-columns:36px 140px 1fr 140px 110px;padding:13px 20px;border-bottom:1px solid rgba(46,42,74,0.5);cursor:pointer;transition:background 0.1s;}
+.log-tr:hover{background:var(--bg3);}
+.log-tr:last-child{border-bottom:none;}
+.log-sev{display:flex;align-items:center;}
+.sev-dot{width:9px;height:9px;border-radius:50%;}
+.log-time{font-size:11px;color:var(--muted);}
+.log-desc{font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:10px;}
+.log-id{font-size:11px;color:var(--blue);}
+.log-status{font-size:12px;font-weight:700;text-align:right;}
+
+/* ── SERVICES ── */
+.services-page{padding:22px 28px;}
+.svc-ctrl-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.svc-ctrl-title{font-size:16px;font-weight:700;color:var(--text);}
+.global-btns{display:flex;gap:7px;}
+.g-btn{font-size:12px;padding:7px 18px;border-radius:6px;cursor:pointer;background:transparent;font-family:'JetBrains Mono',monospace;transition:all 0.15s;}
+.g-btn-start{color:var(--green);border:1px solid rgba(52,211,153,0.3);}.g-btn-start:hover{background:rgba(52,211,153,0.1);}
+.g-btn-stop{color:var(--red);border:1px solid rgba(248,113,113,0.3);}.g-btn-stop:hover{background:rgba(248,113,113,0.1);}
+.g-btn-restart{color:var(--amber);border:1px solid rgba(251,191,36,0.3);}.g-btn-restart:hover{background:rgba(251,191,36,0.1);}
+.svc-list{border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--card);}
+.svc-section-hdr{padding:9px 20px;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;background:var(--bg3);border-bottom:1px solid var(--border);}
+.svc-list-row{display:grid;grid-template-columns:34px 230px 130px 1fr 160px auto;align-items:center;padding:16px 20px;border-bottom:1px solid rgba(46,42,74,0.5);transition:background 0.1s;}
+.svc-list-row:hover{background:var(--bg3);}
+.svc-list-row:last-child{border-bottom:none;}
+.svc-icon-badge{width:28px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;}
+.svc-name-text{font-size:13px;font-weight:500;color:var(--text);display:block;}
+.svc-name-desc{font-size:10px;color:var(--muted);display:block;margin-top:3px;}
+.svc-status-cell{display:flex;align-items:center;gap:8px;}
+.status-dot-big{width:9px;height:9px;border-radius:50%;}
+.status-running{background:var(--green);box-shadow:0 0 6px rgba(52,211,153,0.5);}
+.status-stopped{background:var(--red);}
+.status-restarting{background:var(--amber);}
+.status-text{font-size:12px;}
+.svc-meta{font-size:10px;color:var(--muted);line-height:2;}
+.svc-uptime{font-size:10px;color:var(--muted);}
+.svc-action-btns{display:flex;gap:5px;}
+.a-btn{font-size:11px;padding:5px 13px;border-radius:5px;cursor:pointer;background:transparent;font-family:'JetBrains Mono',monospace;transition:all 0.15s;}
+.a-btn-start{color:var(--green);border:1px solid rgba(52,211,153,0.3);}.a-btn-start:hover{background:rgba(52,211,153,0.1);}
+.a-btn-stop{color:var(--red);border:1px solid rgba(248,113,113,0.3);}.a-btn-stop:hover{background:rgba(248,113,113,0.1);}
+.a-btn-restart{color:var(--amber);border:1px solid rgba(251,191,36,0.3);}.a-btn-restart:hover{background:rgba(251,191,36,0.1);}
+.a-btn-launch{color:var(--blue);border:1px solid rgba(96,165,250,0.3);}.a-btn-launch:hover{background:rgba(96,165,250,0.1);}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--card);border:1px solid var(--accent);border-radius:8px;padding:12px 18px;font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--accent2);z-index:999;opacity:0;transform:translateY(8px);transition:opacity 0.25s,transform 0.25s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.warn{color:var(--amber);border-color:rgba(251,191,36,0.5);}
+.toast.err{color:var(--red);border-color:rgba(248,113,113,0.5);}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-logo">
+    <div class="nav-logo-box"><svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7" fill="none" stroke="#e2e0f0" stroke-width="1.8"/><circle cx="10" cy="10" r="3.5" fill="#e2e0f0"/></svg></div>
+    HomeLab
+  </div>
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="showPage('monitor',this)">monitor</div>
+    <div class="nav-tab" onclick="showPage('logs',this)">logs</div>
+    <div class="nav-tab" onclick="showPage('services',this)">services</div>
+  </div>
+</nav>
+
+<!-- ══ MONITOR ══ -->
+<div class="page active" id="page-monitor">
+  <div class="monitor-page">
+
+    <!-- TOP: 5 stat cards -->
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-card-accent" style="background:linear-gradient(90deg,#7c6fe0,#a78bfa);"></div>
+        <div class="stat-icon" style="background:rgba(124,111,224,0.2);color:#a78bfa;">SYS</div>
+        <div class="stat-label">Linux System</div>
+        <div class="stat-val">Ubuntu</div>
+        <div class="stat-sub">24.04 LTS · host OS</div>
+        <div class="stat-delta"><span class="delta-pill delta-up" id="sys-uptime">↑ loading...</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-accent" style="background:linear-gradient(90deg,#0ea5e9,#60a5fa);"></div>
+        <div class="stat-icon" style="background:rgba(96,165,250,0.2);color:#60a5fa;">NC</div>
+        <div class="stat-label">Nextcloud</div>
+        <div class="stat-val">port 80</div>
+        <div class="stat-sub">self-hosted · apache2</div>
+        <div class="stat-delta"><span class="delta-pill delta-up">↑ active</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-accent" style="background:linear-gradient(90deg,#f59e0b,#fbbf24);"></div>
+        <div class="stat-icon" style="background:rgba(251,191,36,0.2);color:#fbbf24;">SP</div>
+        <div class="stat-label">Splunk SIEM</div>
+        <div class="stat-val" id="siem-events">1,842</div>
+        <div class="stat-sub">events · index: main</div>
+        <div class="stat-delta"><span class="delta-pill delta-warn" id="siem-failed">⚠ loading...</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-accent" style="background:linear-gradient(90deg,#34d399,#6ee7b7);"></div>
+        <div class="stat-icon" style="background:rgba(52,211,153,0.2);color:#34d399;">NET</div>
+        <div class="stat-label">Suricata IDS</div>
+        <div class="stat-val" id="net-pkts">0</div>
+        <div class="stat-sub">packets · wlp3s0</div>
+        <div class="stat-delta"><span class="delta-pill delta-up">↑ 49,285 rules</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-accent" style="background:linear-gradient(90deg,#8b5cf6,#a78bfa);"></div>
+        <div class="stat-icon" style="background:rgba(139,92,246,0.2);color:#a78bfa;">TOR</div>
+        <div class="stat-label">Tor Proxy</div>
+        <div class="stat-val">SOCKS5</div>
+        <div class="stat-sub">port 9050 · dual</div>
+        <div class="stat-delta"><span class="delta-pill delta-up">↑ active</span></div>
+      </div>
+    </div>
+
+    <!-- MIDDLE: big net chart + recent events -->
+    <div class="mid-row">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="chart-meta">network speed · live</div>
+            <div style="display:flex;gap:20px;align-items:baseline;">
+              <div><div style="font-size:10px;color:var(--muted);margin-bottom:2px;">↓ download</div><div class="chart-big-val" id="net-dl">0.00 MB/s</div></div>
+              <div><div style="font-size:10px;color:var(--muted);margin-bottom:2px;">↑ upload</div><div class="chart-big-val" style="color:var(--blue);" id="net-ul">0.00 MB/s</div></div>
+            </div>
+            <div class="chart-big-delta" id="net-delta">measuring...</div>
+          </div>
+          <span class="panel-badge">live</span>
+        </div>
+        <canvas id="netChart" height="160"></canvas>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Recent Events</span>
+          <span class="panel-badge" id="evt-count">—</span>
+        </div>
+        <div id="recent-events"><div style="color:var(--muted);font-size:11px;text-align:center;padding:20px;">loading...</div></div>
+      </div>
+    </div>
+
+    <!-- BOTTOM: CPU, RAM, SIEM -->
+    <div class="bot-row">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="mini-chart-label">cpu usage · live</div>
+            <div class="mini-chart-val" id="cpu-live">—%</div>
+            <div class="mini-chart-sub" id="cpu-delta" style="color:var(--green);">loading...</div>
+          </div>
+          <span class="panel-badge">live</span>
+        </div>
+        <canvas id="cpuChart" height="100"></canvas>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="mini-chart-label">ram usage · live</div>
+            <div class="mini-chart-val" id="ram-live">—%</div>
+            <div class="mini-chart-sub" id="ram-delta" style="color:var(--amber);">loading...</div>
+          </div>
+          <span class="panel-badge">live</span>
+        </div>
+        <canvas id="ramChart" height="100"></canvas>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="mini-chart-label">siem events / hr</div>
+            <div class="mini-chart-val">1,842</div>
+            <div class="mini-chart-sub" style="color:var(--amber);">⚠ failed logins today</div>
+          </div>
+          <span class="panel-badge">7D</span>
+        </div>
+        <canvas id="siemChart" height="100"></canvas>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ LOGS ══ -->
+<div class="page" id="page-logs">
+  <div class="logs-page">
+    <div class="page-hdr">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+        <span class="page-title">event_log</span>
+        <div class="live-indicator" id="live-ind"><span class="live-dot"></span>auto-refresh on</div>
+        <button class="refresh-btn" onclick="manualRefresh()" title="Refresh">↺</button>
+        <div class="auto-toggle" onclick="toggleAuto()">
+          <div class="toggle-box on" id="auto-toggle-box"><div class="toggle-knob"></div></div>
+          <span id="auto-label">auto on</span>
+        </div>
+      </div>
+      <div class="filter-row">
+        <button class="filter-btn active" onclick="filterLogs('all',this)">all</button>
+        <button class="filter-btn" onclick="filterLogs('failed',this)">failed_logins</button>
+        <button class="filter-btn" onclick="filterLogs('upload',this)">uploads</button>
+        <button class="filter-btn" onclick="filterLogs('vpn',this)">vpn</button>
+        <button class="filter-btn" onclick="filterLogs('net',this)">network</button>
+        <button class="filter-btn" onclick="filterLogs('sys',this)">system</button>
+        <button class="filter-btn" onclick="filterLogs('api',this)">api_traffic</button>
+      </div>
+    </div>
+    <div class="log-stat-cards">
+      <div class="log-stat"><div class="log-stat-label">total events</div><div class="log-stat-val" id="log-total">—</div><div class="log-stat-sub" style="color:var(--green);">from auth.log</div></div>
+      <div class="log-stat"><div class="log-stat-label">failed logins</div><div class="log-stat-val" id="log-failed">—</div><div class="log-stat-sub" style="color:var(--amber);" id="log-failed-sub">loading...</div></div>
+      <div class="log-stat"><div class="log-stat-label">suricata alerts</div><div class="log-stat-val" id="log-alerts">—</div><div class="log-stat-sub" style="color:var(--red);">network events</div></div>
+      <div class="log-stat"><div class="log-stat-label">packets captured</div><div class="log-stat-val" id="log-pkts">—</div><div class="log-stat-sub" style="color:var(--green);">suricata · wlp3s0</div></div>
+    </div>
+    <div class="log-table-wrap">
+      <div class="log-thead">
+        <div class="log-th">sev</div>
+        <div class="log-th">time</div>
+        <div class="log-th">description</div>
+        <div class="log-th">event_id</div>
+        <div class="log-th" style="text-align:right;">status</div>
+      </div>
+      <div id="log-tbody"><div style="padding:22px;font-size:12px;color:var(--muted);text-align:center;">loading live logs...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SERVICES ══ -->
+<div class="page" id="page-services">
+  <div class="services-page">
+    <div class="svc-ctrl-header">
+      <span class="svc-ctrl-title">service_control</span>
+      <div class="global-btns">
+        <button class="g-btn g-btn-start" onclick="allAction('start')">▶ start_all</button>
+        <button class="g-btn g-btn-stop" onclick="allAction('stop')">■ stop_all</button>
+        <button class="g-btn g-btn-restart" onclick="allAction('restart')">↺ restart_all</button>
+      </div>
+    </div>
+    <div class="svc-list" id="svc-list"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+Chart.defaults.font.family="'JetBrains Mono',monospace";
+const grid='rgba(124,111,224,0.06)',tc='rgba(226,224,240,0.3)';
+const ax={grid:{color:grid},ticks:{color:tc,font:{size:10}}};
+
+function showPage(n,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));document.getElementById('page-'+n).classList.add('active');el.classList.add('active');}
+let toastTimer;
+function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(type?' '+type:'')+' show';clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2800);}
+
+// ── Charts ────────────────────────────────────────────────────────────────────
+const RT=40,rtL=Array(RT).fill('');
+
+let prevB={recv:0,sent:0,ts:0};
+const dlH=Array(RT).fill(0),ulH=Array(RT).fill(0);
+const netC=new Chart(document.getElementById('netChart'),{type:'line',data:{labels:rtL,datasets:[
+  {label:'↓ DL',data:[...dlH],borderColor:'#34d399',borderWidth:2,pointRadius:0,fill:true,backgroundColor:'rgba(52,211,153,0.08)',tension:0.4},
+  {label:'↑ UL',data:[...ulH],borderColor:'#60a5fa',borderWidth:2,pointRadius:0,fill:false,tension:0.4}
+]},options:{responsive:true,animation:false,plugins:{legend:{display:true,labels:{color:tc,font:{size:10},boxWidth:12,padding:10}}},scales:{x:{display:false},y:{...ax,min:0,ticks:{...ax.ticks,callback:v=>v.toFixed(1)+'M'}}}}});
+
+const cpuH=Array(RT).fill(0);
+const cpuC=new Chart(document.getElementById('cpuChart'),{type:'line',data:{labels:rtL,datasets:[
+  {data:[...cpuH],borderColor:'#a78bfa',borderWidth:2,pointRadius:0,fill:true,backgroundColor:'rgba(167,139,250,0.1)',tension:0.4}
+]},options:{responsive:true,animation:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{...ax,min:0,max:100,ticks:{...ax.ticks,callback:v=>v+'%'}}}}});
+
+const ramH=Array(RT).fill(0);
+const ramC=new Chart(document.getElementById('ramChart'),{type:'line',data:{labels:rtL,datasets:[
+  {data:[...ramH],borderColor:'#fbbf24',borderWidth:2,pointRadius:0,fill:true,backgroundColor:'rgba(251,191,36,0.08)',tension:0.4}
+]},options:{responsive:true,animation:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{...ax,min:0,max:100,ticks:{...ax.ticks,callback:v=>v+'%'}}}}});
+
+new Chart(document.getElementById('siemChart'),{type:'line',data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[
+  {data:[800,1100,950,1400,1200,1600,1842],borderColor:'#f59e0b',borderWidth:2,pointRadius:3,pointBackgroundColor:'#f59e0b',fill:true,backgroundColor:'rgba(245,158,11,0.08)',tension:0.4}
+]},options:{responsive:true,animation:{duration:800},plugins:{legend:{display:false}},scales:{x:{...ax},y:{...ax}}}});
+
+// ── Metrics ───────────────────────────────────────────────────────────────────
+async function fetchMetrics(){
+  try{
+    const r=await fetch('/api/metrics');if(!r.ok)return;
+    const d=await r.json();const now=Date.now();
+    cpuH.push(d.cpu);cpuH.shift();cpuC.data.datasets[0].data=[...cpuH];cpuC.update('none');
+    document.getElementById('cpu-live').textContent=d.cpu+'%';
+    document.getElementById('cpu-delta').textContent='load · '+d.cpu+'% · 16 cores';
+    document.getElementById('cpu-delta').style.color=d.cpu>80?'#f87171':d.cpu>50?'#fbbf24':'#34d399';
+    ramH.push(d.ram_percent);ramH.shift();ramC.data.datasets[0].data=[...ramH];ramC.update('none');
+    document.getElementById('ram-live').textContent=d.ram_percent+'%';
+    document.getElementById('ram-delta').textContent=d.ram_used_gb+' / '+d.ram_total_gb+' GB used';
+    document.getElementById('ram-delta').style.color=d.ram_percent>85?'#f87171':d.ram_percent>60?'#fbbf24':'#34d399';
+    const recv=d.net.bytes_recv,sent=d.net.bytes_sent;
+    if(prevB.ts>0){
+      const el=(now-prevB.ts)/1000;
+      const dl=Math.max(0,(recv-prevB.recv)/el/1e6);
+      const ul=Math.max(0,(sent-prevB.sent)/el/1e6);
+      dlH.push(dl);dlH.shift();ulH.push(ul);ulH.shift();
+      netC.data.datasets[0].data=[...dlH];netC.data.datasets[1].data=[...ulH];netC.update('none');
+      document.getElementById('net-dl').textContent=dl.toFixed(2)+' MB/s';
+      document.getElementById('net-ul').textContent=ul.toFixed(2)+' MB/s';
+      document.getElementById('net-delta').textContent='↓ '+(dl*8).toFixed(1)+' Mbps  ·  ↑ '+(ul*8).toFixed(1)+' Mbps';
+    }
+    prevB={recv,sent,ts:now};
+    document.getElementById('sys-uptime').textContent='↑ uptime: '+d.uptime;
+    document.getElementById('net-pkts').textContent=d.packets.toLocaleString();
+    document.getElementById('siem-failed').textContent='⚠ '+d.failed_logins+' failed logins';
+    document.getElementById('log-pkts').textContent=d.packets.toLocaleString();
+  }catch(e){}
+}
+fetchMetrics();setInterval(fetchMetrics,2000);
+
+// ── Recent Events Panel ───────────────────────────────────────────────────────
+const sevColors={ok:'#34d399',warn:'#fbbf24',err:'#f87171',info:'#60a5fa'};
+const stColors={ok:'#34d399',warn:'#fbbf24',err:'#f87171',info:'#60a5fa'};
+
+function renderRecentEvents(logs){
+  const panel=document.getElementById('recent-events');
+  const recent=logs.filter(l=>l.filter!=='api').slice(0,8);
+  if(!recent.length){panel.innerHTML='<div style="color:var(--muted);font-size:11px;text-align:center;padding:20px;">no events</div>';return;}
+  panel.innerHTML=`<div class="evt-table">${recent.map(l=>{
+    const col=sevColors[l.sev]||'#a78bfa';
+    const stcol=stColors[l.status]||'#a78bfa';
+    return `<div class="evt-row">
+      <span class="evt-dot" style="background:${col};"></span>
+      <span class="evt-desc">${l.desc}</span>
+      <span class="evt-badge" style="background:${stcol}22;color:${stcol};">${l.text}</span>
+    </div>`;
+  }).join('')}</div>`;
+  document.getElementById('evt-count').textContent=logs.filter(l=>l.filter!=='api').length+' events';
+}
+
+// ── Logs ──────────────────────────────────────────────────────────────────────
+let curFilter='all',liveLogs=[],autoRefresh=true,autoTimer;
+
+function renderLogs(){
+  const tbody=document.getElementById('log-tbody');
+  let filtered;
+  if(curFilter==='all') filtered=liveLogs.filter(l=>l.filter!=='api');
+  else if(curFilter==='api') filtered=liveLogs.filter(l=>l.filter==='api');
+  else filtered=liveLogs.filter(l=>l.filter===curFilter);
+  const seen=new Set();
+  filtered=filtered.filter(l=>{const k=l.desc.slice(0,40)+'|'+l.time.slice(0,15);if(seen.has(k))return false;seen.add(k);return true;});
+  if(!filtered.length){tbody.innerHTML='<div style="padding:22px;font-size:12px;color:var(--muted);text-align:center;">no events match this filter</div>';return;}
+  tbody.innerHTML=filtered.map(l=>`<div class="log-tr">
+    <div class="log-sev"><span class="sev-dot" style="background:${sevColors[l.sev]||'#a78bfa'};"></span></div>
+    <div class="log-time">${l.time}</div>
+    <div class="log-desc">${l.desc}</div>
+    <div class="log-id">${l.id}</div>
+    <div class="log-status" style="color:${stColors[l.status]||'#a78bfa'};">${l.text}</div>
+  </div>`).join('');
+}
+
+function filterLogs(f,el){curFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderLogs();}
+
+async function fetchLogs(){
+  try{
+    const r=await fetch('/api/logs');if(!r.ok)return;
+    const data=await r.json();
+    if(data.length>0){
+      liveLogs=data;renderLogs();renderRecentEvents(data);
+      const failed=data.filter(l=>l.filter==='failed').length;
+      const alerts=data.filter(l=>l.filter==='net').length;
+      document.getElementById('log-total').textContent=data.length;
+      document.getElementById('log-failed').textContent=failed;
+      document.getElementById('log-failed-sub').textContent=failed>0?'⚠ check auth.log':'● all clear';
+      document.getElementById('log-alerts').textContent=alerts;
+    }
+  }catch(e){}
+}
+
+function manualRefresh(){fetchLogs();showToast('↺ logs refreshed');}
+
+function toggleAuto(){
+  autoRefresh=!autoRefresh;
+  const box=document.getElementById('auto-toggle-box');
+  const label=document.getElementById('auto-label');
+  const ind=document.getElementById('live-ind');
+  if(autoRefresh){
+    box.classList.add('on');label.textContent='auto on';
+    ind.innerHTML='<span class="live-dot"></span>auto-refresh on';
+    startAutoRefresh();
+  }else{
+    box.classList.remove('on');label.textContent='auto off';
+    ind.innerHTML='<span style="width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block;margin-right:4px;"></span>auto-refresh off';
+    clearInterval(autoTimer);
+  }
+}
+
+function startAutoRefresh(){clearInterval(autoTimer);autoTimer=setInterval(fetchLogs,5000);}
+fetchLogs();startAutoRefresh();
+
+// ── Services ──────────────────────────────────────────────────────────────────
+const svcs={
+  sys:{name:'Linux System',desc:'Ubuntu 24.04 LTS · host OS',meta1:'192.168.2.15',meta2:'kernel · host machine',icon:'SYS',iconBg:'#3b2d8a',iconColor:'#a78bfa',state:'running',url:null},
+  net:{name:'Suricata IDS',desc:'network intrusion detection · IDS',meta1:'interface: wlp3s0',meta2:'49,285 rules loaded',icon:'NET',iconBg:'#1e3a5f',iconColor:'#60a5fa',state:'running',url:null},
+  nc:{name:'Nextcloud',desc:'self-hosted cloud storage · apache2',meta1:'192.168.2.15:80',meta2:'files · web interface',icon:'NC',iconBg:'#004e78',iconColor:'#38bdf8',state:'running',url:'http://192.168.2.15'},
+  sp:{name:'Splunk SIEM',desc:'security event log management',meta1:'192.168.2.15:8000',meta2:'500MB/day · free tier',icon:'SP',iconBg:'#7c2d00',iconColor:'#fbbf24',state:'running',url:'http://192.168.2.15:8000'},
+  tor:{name:'Tor Proxy',desc:'SOCKS5 proxy · anonymizing overlay',meta1:'192.168.2.15:9050',meta2:'127.0.0.1:9050 · dual listen',icon:'TOR',iconBg:'#3b1a6e',iconColor:'#a78bfa',state:'running',url:null},
+};
+const sections=[{label:'core_infrastructure',ids:['sys','net']},{label:'storage_&_access',ids:['nc']},{label:'security',ids:['sp','tor']}];
+
+function uptimeText(s){return s==='running'?'uptime: active':s==='stopped'?'uptime: —':'uptime: restarting...';}
+function stColor(s){return s==='running'?'#34d399':s==='stopped'?'#f87171':'#fbbf24';}
+function stClass(s){return s==='running'?'status-running':s==='stopped'?'status-stopped':'status-restarting';}
+
+function renderServices(){
+  let html='';
+  sections.forEach(sec=>{
+    html+=`<div class="svc-section-hdr">${sec.label}</div>`;
+    sec.ids.forEach(id=>{
+      const s=svcs[id];
+      html+=`<div class="svc-list-row" id="row-${id}">
+        <div class="svc-icon-badge" style="background:${s.iconBg};color:${s.iconColor};">${s.icon}</div>
+        <div><span class="svc-name-text">${s.name}</span><span class="svc-name-desc">${s.desc}</span></div>
+        <div class="svc-status-cell"><span class="status-dot-big ${stClass(s.state)}"></span><span class="status-text" style="color:${stColor(s.state)};">${s.state}</span></div>
+        <div class="svc-meta">${s.meta1}<br>${s.meta2}</div>
+        <div class="svc-uptime" id="uptime-${id}">${uptimeText(s.state)}</div>
+        <div class="svc-action-btns">
+          <button class="a-btn a-btn-start" onclick="svcAction('${id}','start')">▶ start</button>
+          <button class="a-btn a-btn-stop" onclick="svcAction('${id}','stop')">■ stop</button>
+          <button class="a-btn a-btn-restart" onclick="svcAction('${id}','restart')">↺ restart</button>
+          ${s.url?`<button class="a-btn a-btn-launch" onclick="window.open('${s.url}','_blank')">⎋ launch</button>`:''}
+        </div>
+      </div>`;
+    });
+  });
+  document.getElementById('svc-list').innerHTML=html;
+}
+
+function updateRow(id){
+  const s=svcs[id],row=document.getElementById('row-'+id);
+  if(!row)return;
+  row.querySelector('.status-dot-big').className='status-dot-big '+stClass(s.state);
+  row.querySelector('.status-text').textContent=s.state;
+  row.querySelector('.status-text').style.color=stColor(s.state);
+  document.getElementById('uptime-'+id).textContent=uptimeText(s.state);
+}
+
+async function svcAction(id,action){
+  showToast('↺ sending...','warn');
+  try{
+    const r=await fetch(`/api/service/${action}/${id}`,{method:'POST'});
+    if(r.ok){const d=await r.json();svcs[id].state=d.state||(action==='stop'?'stopped':'running');updateRow(id);showToast((action==='start'?'▶ ':action==='stop'?'■ ':'↺ ')+svcs[id].name+' '+action,action==='stop'?'err':action==='restart'?'warn':'');if(action==='restart')setTimeout(fetchServicesStatus,3000);}
+    else localAction(id,action);
+  }catch(e){localAction(id,action);}
+}
+
+function localAction(id,action){
+  if(action==='stop'){svcs[id].state='stopped';updateRow(id);showToast('■ '+svcs[id].name+' stopped','err');}
+  else if(action==='start'){svcs[id].state='running';updateRow(id);showToast('▶ '+svcs[id].name+' started');}
+  else{svcs[id].state='restarting';updateRow(id);showToast('↺ '+svcs[id].name+' restarting...','warn');setTimeout(()=>{svcs[id].state='running';updateRow(id);showToast('▶ '+svcs[id].name+' back online');},2000);}
+}
+
+function allAction(action){
+  const ids=Object.keys(svcs);
+  if(action==='start'){ids.filter(id=>svcs[id].state!=='running').forEach(id=>{svcs[id].state='running';updateRow(id);});showToast('▶ all services started');}
+  else if(action==='stop'){ids.forEach(id=>{svcs[id].state='stopped';updateRow(id);});showToast('■ all services stopped','err');}
+  else{ids.forEach(id=>{svcs[id].state='restarting';updateRow(id);});showToast('↺ restarting all...','warn');setTimeout(()=>{ids.forEach(id=>{svcs[id].state='running';updateRow(id);});showToast('▶ all services back online');},2500);}
+}
+
+async function fetchServicesStatus(){
+  try{const r=await fetch('/api/services');if(!r.ok)return;const d=await r.json();Object.entries(d).forEach(([id,s])=>{if(svcs[id]){svcs[id].state=s.state;updateRow(id);}});}catch(e){}
+}
+
+renderServices();fetchServicesStatus();setInterval(fetchServicesStatus,15000);
+</script>
+</body>
+</html>

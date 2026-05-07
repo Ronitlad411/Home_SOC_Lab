@@ -1,0 +1,75 @@
+<svg viewBox="0 0 800 560" xmlns="http://www.w3.org/2000/svg" width="800" height="560">
+
+  <rect width="800" height="560" fill="#0f0e17"/>
+
+  <text x="400" y="35" text-anchor="middle" fill="#7c6fe0" font-size="16" font-weight="bold" font-family="Courier New, monospace">Home SOC Lab — Network Architecture</text>
+
+  <!-- Internet -->
+  <rect x="330" y="55" width="140" height="38" rx="6" fill="#1a1a2e" stroke="#444" stroke-width="1.5"/>
+  <text x="400" y="79" text-anchor="middle" fill="#aaa" font-size="13" font-family="Courier New, monospace">Internet</text>
+
+  <line x1="400" y1="93" x2="400" y2="118" stroke="#444" stroke-width="1.5"/>
+
+  <!-- Router -->
+  <rect x="330" y="118" width="140" height="38" rx="6" fill="#1a1a2e" stroke="#555" stroke-width="1.5"/>
+  <text x="400" y="142" text-anchor="middle" fill="#aaa" font-size="13" font-family="Courier New, monospace">Home Router</text>
+
+  <line x1="400" y1="156" x2="400" y2="188" stroke="#444" stroke-width="1.5"/>
+
+  <!-- Ubuntu Server -->
+  <rect x="270" y="188" width="260" height="52" rx="8" fill="#1c1a3a" stroke="#7c6fe0" stroke-width="2"/>
+  <text x="400" y="210" text-anchor="middle" fill="#7c6fe0" font-size="13" font-weight="bold" font-family="Courier New, monospace">Ubuntu Server 24.04 LTS</text>
+  <text x="400" y="228" text-anchor="middle" fill="#888" font-size="11" font-family="Courier New, monospace">10.0.0.108 · Asus TUF A15 · 16GB</text>
+
+  <!-- LEFT: Splunk -->
+  <rect x="30" y="305" width="155" height="50" rx="6" fill="#1a1a2e" stroke="#e86e1a" stroke-width="1.5"/>
+  <text x="107" y="325" text-anchor="middle" fill="#e86e1a" font-size="12" font-weight="bold" font-family="Courier New, monospace">Splunk SIEM</text>
+  <text x="107" y="343" text-anchor="middle" fill="#666" font-size="10" font-family="Courier New, monospace">:8000 · :8089 · :8088</text>
+
+  <!-- LEFT: Suricata -->
+  <rect x="30" y="385" width="155" height="50" rx="6" fill="#1a1a2e" stroke="#39c5bb" stroke-width="1.5"/>
+  <text x="107" y="405" text-anchor="middle" fill="#39c5bb" font-size="12" font-weight="bold" font-family="Courier New, monospace">Suricata IDS</text>
+  <text x="107" y="423" text-anchor="middle" fill="#666" font-size="10" font-family="Courier New, monospace">wlp3s0 · eve.json</text>
+
+  <!-- LEFT: VoltLAB -->
+  <rect x="30" y="465" width="155" height="50" rx="6" fill="#1a1a2e" stroke="#7c6fe0" stroke-width="1.5"/>
+  <text x="107" y="485" text-anchor="middle" fill="#7c6fe0" font-size="12" font-weight="bold" font-family="Courier New, monospace">VoltLAB Dashboard</text>
+  <text x="107" y="503" text-anchor="middle" fill="#666" font-size="10" font-family="Courier New, monospace">Flask · :5000</text>
+
+  <!-- RIGHT: Nextcloud -->
+  <rect x="615" y="305" width="155" height="50" rx="6" fill="#1a1a2e" stroke="#0082c9" stroke-width="1.5"/>
+  <text x="692" y="325" text-anchor="middle" fill="#0082c9" font-size="12" font-weight="bold" font-family="Courier New, monospace">Nextcloud</text>
+  <text x="692" y="343" text-anchor="middle" fill="#666" font-size="10" font-family="Courier New, monospace">Apache2 · :80 · :443</text>
+
+  <!-- RIGHT: Tor -->
+  <rect x="615" y="385" width="155" height="50" rx="6" fill="#1a1a2e" stroke="#9b59b6" stroke-width="1.5"/>
+  <text x="692" y="405" text-anchor="middle" fill="#9b59b6" font-size="12" font-weight="bold" font-family="Courier New, monospace">Tor + Proxychains</text>
+  <text x="692" y="423" text-anchor="middle" fill="#666" font-size="10" font-family="Courier New, monospace">SOCKS5 · :9050</text>
+
+  <!-- RIGHT: WireGuard -->
+  <rect x="615" y="465" width="155" height="50" rx="6" fill="#1a1a2e" stroke="#27ae60" stroke-width="1.5"/>
+  <text x="692" y="485" text-anchor="middle" fill="#27ae60" font-size="12" font-weight="bold" font-family="Courier New, monospace">WireGuard VPN</text>
+  <text x="692" y="503" text-anchor="middle" fill="#666" font-size="10" font-family="Courier New, monospace">UDP · :51820</text>
+
+  <!-- BOTTOM CENTER: Tailscale -->
+  <rect x="295" y="465" width="210" height="50" rx="6" fill="#1a1a2e" stroke="#4a9eff" stroke-width="1.5"/>
+  <text x="400" y="485" text-anchor="middle" fill="#4a9eff" font-size="12" font-weight="bold" font-family="Courier New, monospace">Tailscale</text>
+  <text x="400" y="503" text-anchor="middle" fill="#666" font-size="10" font-family="Courier New, monospace">100.85.43.39 · Remote Access</text>
+
+  <!-- Connectors: server to left -->
+  <line x1="270" y1="210" x2="185" y2="330" stroke="#e86e1a" stroke-width="1" stroke-dasharray="5,3"/>
+  <line x1="270" y1="220" x2="185" y2="410" stroke="#39c5bb" stroke-width="1" stroke-dasharray="5,3"/>
+  <line x1="270" y1="230" x2="185" y2="490" stroke="#7c6fe0" stroke-width="1" stroke-dasharray="5,3"/>
+
+  <!-- Connectors: server to right -->
+  <line x1="530" y1="210" x2="615" y2="330" stroke="#0082c9" stroke-width="1" stroke-dasharray="5,3"/>
+  <line x1="530" y1="220" x2="615" y2="410" stroke="#9b59b6" stroke-width="1" stroke-dasharray="5,3"/>
+  <line x1="530" y1="230" x2="615" y2="490" stroke="#27ae60" stroke-width="1" stroke-dasharray="5,3"/>
+
+  <!-- Connector: server to tailscale -->
+  <line x1="400" y1="240" x2="400" y2="465" stroke="#4a9eff" stroke-width="1" stroke-dasharray="5,3"/>
+
+  <!-- Log flow label -->
+  <text x="175" y="298" fill="#555" font-size="9" font-family="Courier New, monospace">auth.log · eve.json · tor.log</text>
+
+</svg>

@@ -1,0 +1,9 @@
+| SSH Brute Force Detection — T1110
+| Triggers on 5+ failed SSH attempts from a single IP within 60 seconds
+
+index=main sourcetype=linux_secure "Failed password"
+| rex field=_raw "from (?P<src_ip>\d+\.\d+\.\d+\.\d+)"
+| bucket _time span=60s
+| stats count by src_ip, _time
+| where count > 5
+| sort -count

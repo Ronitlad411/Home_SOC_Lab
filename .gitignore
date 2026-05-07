@@ -1,0 +1,31 @@
+# Credentials and secrets
+*.env
+.env
+secrets.txt
+passwords.txt
+privatekey
+*.key
+*.pem
+
+# Logs
+*.log
+logs/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Splunk
+*.spl.bak
+
+# WireGuard private keys
+wireguard/configs/privatekey
+wireguard/configs/*.conf
+!wireguard/configs/wg0-example.conf

@@ -1,0 +1,8 @@
+| Sudo Privilege Escalation — T1021
+| Tracks all sudo command usage by user
+
+index=main sourcetype=linux_secure "sudo"
+| rex field=_raw "COMMAND=(?P<command>.+)"
+| rex field=_raw "USER=(?P<user>\w+)"
+| stats count by user, command
+| sort -count

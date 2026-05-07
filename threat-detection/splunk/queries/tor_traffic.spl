@@ -1,0 +1,8 @@
+| Tor Traffic Detection — T1090
+| Correlates Tor log activity with Suricata ET Tor signatures
+
+index=main (sourcetype=tor OR sourcetype=suricata)
+| eval source_type=if(sourcetype="tor", "Tor Log", "Suricata")
+| eval tor_indicator=if(sourcetype="suricata" AND match(_raw, "(?i)tor"), "Suricata-Tor-Sig", source_type)
+| stats count by tor_indicator, host
+| sort -count

@@ -1,0 +1,6 @@
+| Suricata High-Severity Alerts — T1071
+| Shows all severity 1 and 2 Suricata alerts with source IPs
+
+index=main sourcetype=suricata alert.severity<=2
+| stats count by alert.signature, src_ip, dest_ip, alert.severity
+| sort alert.severity, -count
